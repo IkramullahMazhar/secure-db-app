@@ -3,37 +3,160 @@
 <head>
     <meta charset="UTF-8">
     <title>Database Form</title>
+    <style>
+        .error {
+            color: red;
+            font-size: 0.9rem;
+        }
+        .success {
+            color: green;
+            font-size: 1rem;
+        }
+        input {
+            margin-bottom: 4px;
+        }
+    </style>
 </head>
 <body>
     <h1>Submit Your Data</h1>
 
-    <!-- The form sends data to /submit on the server using POST -->
-    <form id="userForm" method="post" action="/submit">
-        <label for="firstName">First Name:</label>
-        <input type="text" id="firstName" name="firstName" required><br><br>
+    <form id="userForm" method="post" action="/submit" novalidate>
+        <div>
+            <label for="firstName">First Name:</label><br>
+            <input type="text" id="firstName" name="firstName">
+            <div id="firstNameError" class="error"></div>
+        </div>
 
-        <label for="secondName">Second Name:</label>
-        <input type="text" id="secondName" name="secondName" required><br><br>
+        <div>
+            <label for="secondName">Second Name:</label><br>
+            <input type="text" id="secondName" name="secondName">
+            <div id="secondNameError" class="error"></div>
+        </div>
 
-        <label for="email">Email:</label>
-        <input type="email" id="email" name="email" required><br><br>
+        <div>
+            <label for="email">Email:</label><br>
+            <input type="text" id="email" name="email">
+            <div id="emailError" class="error"></div>
+        </div>
 
-        <label for="phone">Phone:</label>
-        <input type="text" id="phone" name="phone" required><br><br>
+        <div>
+            <label for="phone">Phone:</label><br>
+            <input type="text" id="phone" name="phone">
+            <div id="phoneError" class="error"></div>
+        </div>
 
-        <label for="eircode">Eircode:</label>
-        <input type="text" id="eircode" name="eircode" required><br><br>
+        <div>
+            <label for="eircode">Eircode:</label><br>
+            <input type="text" id="eircode" name="eircode">
+            <div id="eircodeError" class="error"></div>
+        </div>
 
         <button type="submit">Submit</button>
+        <div id="formMessage"></div>
     </form>
 
-    <!-- Simple script just to show the form is submitting on the browser side -->
     <script>
         const form = document.getElementById('userForm');
 
+        function isAlphanumeric(str) {
+            return /^[a-zA-Z0-9]+$/.test(str);
+        }
+
+        function isEmail(str) {
+            return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(str);
+        }
+
+        function isNumeric(str) {
+            return /^[0-9]+$/.test(str);
+        }
+
+        function isValidEircode(str) {
+            // Starts with a number, alphanumeric, exactly 6 chars
+            return /^[0-9][a-zA-Z0-9]{5}$/.test(str);
+        }
+
         form.addEventListener('submit', function (event) {
-            console.log('Form is being submitted');
-            // We are not preventing default here, so the browser will send the form to /submit
+            event.preventDefault(); // stop normal submit until we validate
+
+            // Clear messages
+            document.getElementById('firstNameError').textContent = '';
+            document.getElementById('secondNameError').textContent = '';
+            document.getElementById('emailError').textContent = '';
+            document.getElementById('phoneError').textContent = '';
+            document.getElementById('eircodeError').textContent = '';
+            document.getElementById('formMessage').textContent = '';
+
+            let valid = true;
+
+            const firstName = document.getElementById('firstName').value.trim();
+            const secondName = document.getElementById('secondName').value.trim();
+            const email = document.getElementById('email').value.trim();
+            const phone = document.getElementById('phone').value.trim();
+            const eircode = document.getElementById('eircode').value.trim();
+
+            // First name: alphanumeric, max 20 chars
+            if (!firstName) {
+                document.getElementById('firstNameError').textContent = 'First name is required.';
+                valid = false;
+            } else if (!isAlphanumeric(firstName)) {
+                document.getElementById('firstNameError').textContent = 'First name must be letters or numbers only.';
+                valid = false;
+            } else if (firstName.length > 20) {
+                document.getElementById('firstNameError').textContent = 'First name must be max 20 characters.';
+                valid = false;
+            }
+
+            // Second name: alphanumeric, max 20 chars
+            if (!secondName) {
+                document.getElementById('secondNameError').textContent = 'Second name is required.';
+                valid = false;
+            } else if (!isAlphanumeric(secondName)) {
+                document.getElementById('secondNameError').textContent = 'Second name must be letters or numbers only.';
+                valid = false;
+            } else if (secondName.length > 20) {
+                document.getElementById('secondNameError').textContent = 'Second name must be max 20 characters.';
+                valid = false;
+            }
+
+            // Email: basic email format
+            if (!email) {
+                document.getElementById('emailError').textContent = 'Email is required.';
+                valid = false;
+            } else if (!isEmail(email)) {
+                document.getElementById('emailError').textContent = 'Email must be a valid email format.';
+                valid = false;
+            }
+
+            // Phone: numeric, exactly 10 digits
+            if (!phone) {
+                document.getElementById('phoneError').textContent = 'Phone number is required.';
+                valid = false;
+            } else if (!isNumeric(phone)) {
+                document.getElementById('phoneError').textContent = 'Phone number must contain only numbers.';
+                valid = false;
+            } else if (phone.length !== 10) {
+                document.getElementById('phoneError').textContent = 'Phone number must be exactly 10 digits.';
+                valid = false;
+            }
+
+            // Eircode: starts with number, alphanumeric, exactly 6 chars
+            if (!eircode) {
+                document.getElementById('eircodeError').textContent = 'Eircode is required.';
+                valid = false;
+            } else if (!isValidEircode(eircode)) {
+                document.getElementById('eircodeError').textContent =
+                    'Eircode must start with a number, be alphanumeric, and exactly 6 characters.';
+                valid = false;
+            }
+
+            if (!valid) {
+                document.getElementById('formMessage').textContent = '';
+                return; // do not submit
+            }
+
+            // If everything is valid, submit the form to the server
+            document.getElementById('formMessage').textContent = '';
+            form.submit();
         });
     </script>
 </body>
