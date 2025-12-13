@@ -1,0 +1,4 @@
+firstName,secondName,email,phone,eircode
+Ali,Test,ali@example.com,1234567890,1AB2C3
+Bad,#$@,bad@example.com,111,ABCDE1
+John,Doe,john.doe@example.com,0987654321,2XYZ99
