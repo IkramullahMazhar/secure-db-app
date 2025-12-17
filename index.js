@@ -1,6 +1,6 @@
 // index.js
-// Reads a CSV file, validates each record, inserts only valid rows into mysql_table,
-// and logs the row numbers of invalid records.
+// Reads data.csv, validates each record, inserts only valid rows into mysql_table,
+// and logs row numbers and reasons for invalid records.
 
 const fs = require('fs');
 const path = require('path');
@@ -31,16 +31,16 @@ function isValidEircode(str) {
     return /^[0-9][a-zA-Z0-9]{5}$/.test(str);
 }
 
+// record is one row from CSV as an object
 function validateCsvRecord(record, rowNumber) {
     const errors = [];
 
-    // Adjust these property names to match your CSV header columns.
-    // Example CSV header: firstName,secondName,email,phone,eircode
-    const rawFirstName = record.firstName || record.first_name || '';
-    const rawSecondName = record.secondName || record.second_name || '';
+    // *** Your actual CSV column names ***
+    const rawFirstName = record.first_name || record.firstName || '';
+    const rawSecondName = record.second_name || record.secondName || '';
     const rawEmail = record.email || '';
     const rawPhone = record.phone || '';
-    const rawEircode = record.eircode || '';
+    const rawEircode = record.eircode || record.eir_code || record.eirCode || '';
 
     const firstName = sanitizeString(rawFirstName);
     const secondName = sanitizeString(rawSecondName);
@@ -134,7 +134,6 @@ async function importCsv() {
                     `;
                     const params = [firstName, secondName, email, phone, eircode];
 
-                    // Push promise for later await
                     insertPromises.push(
                         pool.execute(sql, params).catch((err) => {
                             invalidCount++;
