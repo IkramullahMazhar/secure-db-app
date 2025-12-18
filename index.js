@@ -1,13 +1,7 @@
-// index.js
-// Reads data.csv, validates each record, inserts only valid rows into mysql_table,
-// and logs row numbers and reasons for invalid records.
-
 const fs = require('fs');
 const path = require('path');
 const csv = require('csv-parser');
 const { pool } = require('./database');
-
-// ---------- Validation helpers (same logic as server.js) ----------
 
 function sanitizeString(str) {
     if (typeof str !== 'string') return '';
@@ -27,15 +21,12 @@ function isNumeric(str) {
 }
 
 function isValidEircode(str) {
-    // Starts with a number, alphanumeric, exactly 6 chars
     return /^[0-9][a-zA-Z0-9]{5}$/.test(str);
 }
 
-// record is one row from CSV as an object
 function validateCsvRecord(record, rowNumber) {
     const errors = [];
 
-    // *** Your actual CSV column names ***
     const rawFirstName = record.first_name || record.firstName || '';
     const rawSecondName = record.second_name || record.secondName || '';
     const rawEmail = record.email || '';
@@ -48,7 +39,6 @@ function validateCsvRecord(record, rowNumber) {
     const phone = sanitizeString(rawPhone);
     const eircode = sanitizeString(rawEircode);
 
-    // First name
     if (!firstName) {
         errors.push('First name is required.');
     } else if (!isAlphanumeric(firstName)) {
@@ -57,7 +47,6 @@ function validateCsvRecord(record, rowNumber) {
         errors.push('First name must be max 20 characters.');
     }
 
-    // Second name
     if (!secondName) {
         errors.push('Second name is required.');
     } else if (!isAlphanumeric(secondName)) {
@@ -66,14 +55,12 @@ function validateCsvRecord(record, rowNumber) {
         errors.push('Second name must be max 20 characters.');
     }
 
-    // Email
     if (!email) {
         errors.push('Email is required.');
     } else if (!isEmail(email)) {
         errors.push('Email must be a valid email format.');
     }
 
-    // Phone
     if (!phone) {
         errors.push('Phone number is required.');
     } else if (!isNumeric(phone)) {
@@ -82,7 +69,6 @@ function validateCsvRecord(record, rowNumber) {
         errors.push('Phone number must be exactly 10 digits.');
     }
 
-    // Eircode
     if (!eircode) {
         errors.push('Eircode is required.');
     } else if (!isValidEircode(eircode)) {
@@ -96,10 +82,8 @@ function validateCsvRecord(record, rowNumber) {
     };
 }
 
-// ---------- Main CSV processing function ----------
-
 async function importCsv() {
-    const csvFilePath = path.join(__dirname, 'data.csv'); // CSV in project root
+    const csvFilePath = path.join(__dirname, 'data.csv');
 
     if (!fs.existsSync(csvFilePath)) {
         console.error('CSV file not found at:', csvFilePath);
@@ -181,8 +165,6 @@ async function importCsv() {
             });
     });
 }
-
-// ---------- Run import when index.js is executed ----------
 
 importCsv()
     .then((stats) => {

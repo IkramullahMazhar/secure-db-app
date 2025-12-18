@@ -1,4 +1,3 @@
-// server.js
 const express = require('express');
 const path = require('path');
 const { pool, checkDatabaseConnection } = require('./database');
@@ -6,11 +5,8 @@ const { pool, checkDatabaseConnection } = require('./database');
 const app = express();
 const PORT = 3000;
 
-// ---------- Helper functions for validation & cleaning ----------
-
 function sanitizeString(str) {
     if (typeof str !== 'string') return '';
-    // Remove leading/trailing spaces and dangerous characters
     return str.trim().replace(/[<>"'`;]/g, '');
 }
 
@@ -27,11 +23,9 @@ function isNumeric(str) {
 }
 
 function isValidEircode(str) {
-    // Starts with a number, alphanumeric, exactly 6 chars
     return /^[0-9][a-zA-Z0-9]{5}$/.test(str);
 }
 
-// Validate data on server (same rules as client)
 function validateUserData(data) {
     const errors = {};
 
@@ -41,7 +35,6 @@ function validateUserData(data) {
     const phone = sanitizeString(data.phone);
     const eircode = sanitizeString(data.eircode);
 
-    // First name
     if (!firstName) {
         errors.firstName = 'First name is required.';
     } else if (!isAlphanumeric(firstName)) {
@@ -50,7 +43,6 @@ function validateUserData(data) {
         errors.firstName = 'First name must be max 20 characters.';
     }
 
-    // Second name
     if (!secondName) {
         errors.secondName = 'Second name is required.';
     } else if (!isAlphanumeric(secondName)) {
@@ -59,14 +51,12 @@ function validateUserData(data) {
         errors.secondName = 'Second name must be max 20 characters.';
     }
 
-    // Email
     if (!email) {
         errors.email = 'Email is required.';
     } else if (!isEmail(email)) {
         errors.email = 'Email must be a valid email format.';
     }
 
-    // Phone
     if (!phone) {
         errors.phone = 'Phone number is required.';
     } else if (!isNumeric(phone)) {
@@ -75,7 +65,6 @@ function validateUserData(data) {
         errors.phone = 'Phone number must be exactly 10 digits.';
     }
 
-    // Eircode
     if (!eircode) {
         errors.eircode = 'Eircode is required.';
     } else if (!isValidEircode(eircode)) {
@@ -88,41 +77,34 @@ function validateUserData(data) {
     };
 }
 
-// ---------- Core middleware ----------
-
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 
-// Simple request logger
 app.use((req, res, next) => {
     console.log(`${req.method} ${req.url}`);
     next();
 });
 
-// Serve static files
-app.use(express.static('.'));
+// Serve static files (so form.html, CSS, etc. can be loaded)
+app.use(express.static(__dirname));
 
-// Main page - send form.html
+// Main page
 app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'form.html'));
 });
 
-// Handle form submission with validation + DB insert
 app.post('/submit', async (req, res) => {
     try {
-        // Validate and sanitize input
         const { errors, cleanedData } = validateUserData(req.body);
 
         if (Object.keys(errors).length > 0) {
             console.log('Server-side validation errors:', errors);
-            // Do not insert into DB if invalid
             return res.status(400).json({
                 message: 'Validation failed on server.',
                 errors
             });
         }
 
-        // Ensure DB and schema are OK
         await checkDatabaseConnection();
 
         const { firstName, secondName, email, phone, eircode } = cleanedData;
@@ -144,7 +126,6 @@ app.post('/submit', async (req, res) => {
     }
 });
 
-// Start server and check DB on startup
 app.listen(PORT, () => {
     console.log(`Server running on http://localhost:${PORT}`);
     checkDatabaseConnection()

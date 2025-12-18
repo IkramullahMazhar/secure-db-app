@@ -2,8 +2,8 @@ const mysql = require('mysql2/promise');
 
 const pool = mysql.createPool({
     host: 'localhost',
-    user: 'root',           // or your username
-    password: '356D0278i!', // the same password you used in Workbench
+    user: 'root',           // change if needed
+    password: '356D0278i!', // your password
     database: 'assignment_db',
     waitForConnections: true,
     connectionLimit: 10,
