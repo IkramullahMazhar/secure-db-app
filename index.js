@@ -1,13 +1,18 @@
+// Built‑in modules for reading files and working with paths
 const fs = require('fs');
 const path = require('path');
+// CSV parser to read the data.csv file row by row
 const csv = require('csv-parser');
+// Reuse the MySQL pool I set up in database.js
 const { pool } = require('./database');
 
+// Simple helper to clean up strings before validating/saving
 function sanitizeString(str) {
     if (typeof str !== 'string') return '';
     return str.trim().replace(/[<>"'`;]/g, '');
 }
 
+// A few small helpers for the different checks I need
 function isAlphanumeric(str) {
     return /^[a-zA-Z0-9]+$/.test(str);
 }
@@ -24,21 +29,25 @@ function isValidEircode(str) {
     return /^[0-9][a-zA-Z0-9]{5}$/.test(str);
 }
 
+// Validate one CSV record and return any errors plus cleaned values
 function validateCsvRecord(record, rowNumber) {
     const errors = [];
 
+    // Map CSV column names to my internal field names
     const rawFirstName = record.first_name || record.firstName || '';
     const rawSecondName = record.second_name || record.secondName || '';
     const rawEmail = record.email || '';
     const rawPhone = record.phone || '';
     const rawEircode = record.eircode || record.eir_code || record.eirCode || '';
 
+    // Clean up values before checking
     const firstName = sanitizeString(rawFirstName);
     const secondName = sanitizeString(rawSecondName);
     const email = sanitizeString(rawEmail);
     const phone = sanitizeString(rawPhone);
     const eircode = sanitizeString(rawEircode);
 
+    // Same validation rules as the HTML form / server
     if (!firstName) {
         errors.push('First name is required.');
     } else if (!isAlphanumeric(firstName)) {
@@ -82,9 +91,11 @@ function validateCsvRecord(record, rowNumber) {
     };
 }
 
+// Main function that streams the CSV and inserts valid rows into MySQL
 async function importCsv() {
     const csvFilePath = path.join(__dirname, 'data.csv');
 
+    // Quick check so I don’t try to read a missing file
     if (!fs.existsSync(csvFilePath)) {
         console.error('CSV file not found at:', csvFilePath);
         process.exit(1);
@@ -97,6 +108,7 @@ async function importCsv() {
     let validCount = 0;
     let invalidCount = 0;
 
+    // I keep all DB insert promises here and wait for them at the end
     const insertPromises = [];
 
     return new Promise((resolve, reject) => {
@@ -120,6 +132,7 @@ async function importCsv() {
 
                     insertPromises.push(
                         pool.execute(sql, params).catch((err) => {
+                            // If the DB insert fails, I treat that row as invalid too
                             invalidCount++;
                             invalidRows.push({
                                 rowNumber,
@@ -128,6 +141,7 @@ async function importCsv() {
                         })
                     );
                 } else {
+                    // Record which CSV rows failed validation and why
                     invalidCount++;
                     invalidRows.push({ rowNumber, errors });
                     console.warn(`Row ${rowNumber} validation failed:`, errors.join('; '));
@@ -135,6 +149,7 @@ async function importCsv() {
             })
             .on('end', async () => {
                 try {
+                    // Wait for all inserts for valid rows to finish
                     await Promise.all(insertPromises);
 
                     console.log('CSV processing completed.');
@@ -149,6 +164,7 @@ async function importCsv() {
                         });
                     }
 
+                    // Return a small summary object at the end
                     resolve({
                         total: rowNumber,
                         valid: validCount,
@@ -166,6 +182,7 @@ async function importCsv() {
     });
 }
 
+// Run the import as soon as this script is executed
 importCsv()
     .then((stats) => {
         console.log('Import finished. Stats:', stats);

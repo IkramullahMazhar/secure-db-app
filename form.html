@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <title>Submit Your Data</title>
     <style>
+        /* I use CSS variables so I can change the colour theme in one place */
         :root {
             --bg: #e3f2fd;
             --card-bg: #ffffff;
@@ -18,11 +19,13 @@
             --border: #cfd8dc;
         }
 
+        /* Simple reset and shared font choice */
         * {
             box-sizing: border-box;
             font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
         }
 
+        /* Full-page background and centering the form card */
         body {
             margin: 0;
             min-height: 100vh;
@@ -32,6 +35,7 @@
             background: radial-gradient(circle at top left, #b3e5fc, var(--bg));
         }
 
+        /* Main form container with soft shadow and rounded corners */
         .form-wrapper {
             background: linear-gradient(135deg, #ffffff, #f1f8ff);
             padding: 32px 40px;
@@ -48,16 +52,19 @@
             color: var(--text-main);
         }
 
+        /* Short description under the heading */
         .subtitle {
             margin: 0 0 20px;
             color: var(--text-muted);
             font-size: 0.95rem;
         }
 
+        /* Wrap each label + input + error together */
         .field-group {
             margin-bottom: 16px;
         }
 
+        /* Label row shows the field name and a small hint on the right */
         label {
             display: flex;
             justify-content: space-between;
@@ -74,6 +81,7 @@
             color: var(--text-muted);
         }
 
+        /* Basic styling for all text inputs */
         input[type="text"] {
             width: 100%;
             padding: 10px 12px;
@@ -84,6 +92,7 @@
             background-color: rgba(255, 255, 255, 0.9);
         }
 
+        /* Highlight input when user is typing */
         input[type="text"]:focus {
             outline: none;
             border-color: var(--primary);
@@ -91,6 +100,7 @@
             background-color: #ffffff;
         }
 
+        /* Area where I show field-specific error messages */
         .error {
             color: var(--error);
             font-size: 0.8rem;
@@ -98,6 +108,7 @@
             min-height: 16px;
         }
 
+        /* General form message line (success or server feedback) */
         #formMessage {
             margin-top: 12px;
             font-size: 0.9rem;
@@ -108,6 +119,7 @@
             color: var(--success);
         }
 
+        /* Horizontal row for submit button and the small badge */
         .btn-row {
             display: flex;
             align-items: center;
@@ -115,6 +127,7 @@
             margin-top: 8px;
         }
 
+        /* Main submit button style */
         button[type="submit"] {
             background: linear-gradient(135deg, var(--primary), var(--primary-dark));
             color: #ffffff;
@@ -129,6 +142,7 @@
             transition: transform 0.12s ease, box-shadow 0.12s ease, background 0.12s ease;
         }
 
+        /* Small hover / click animation to make it feel interactive */
         button[type="submit"]:hover {
             transform: translateY(-1px);
             box-shadow: 0 14px 24px rgba(2, 136, 209, 0.4);
@@ -140,6 +154,7 @@
             box-shadow: 0 8px 14px rgba(2, 136, 209, 0.35);
         }
 
+        /* Little pill badge showing that data is secure/validated */
         .badge {
             padding: 4px 10px;
             border-radius: 999px;
@@ -149,6 +164,7 @@
             border: 1px solid rgba(165, 214, 167, 0.9);
         }
 
+        /* Info box under the form with a short tip for the user */
         .pill-footer {
             margin-top: 18px;
             padding: 10px 12px;
@@ -167,6 +183,7 @@
             color: var(--primary-dark);
         }
 
+        /* On smaller screens I reduce padding so it fits nicely */
         @media (max-width: 540px) {
             .form-wrapper {
                 margin: 24px;
@@ -180,6 +197,7 @@
     <h1>Submit Your Data</h1>
     <p class="subtitle">Please fill in your details below. All fields are required.</p>
 
+    <!-- Main HTML form that posts data to my Express route /submit -->
     <form id="userForm" method="post" action="/submit" novalidate>
         <div class="field-group">
             <label for="firstName">
@@ -240,8 +258,10 @@
 </div>
 
 <script>
+    // Grab the form so I can attach my submit handler
     const form = document.getElementById('userForm');
 
+    // Small helper functions for the different patterns I need to check
     function isAlphanumeric(str) {
         return /^[a-zA-Z0-9]+$/.test(str);
     }
@@ -258,9 +278,11 @@
         return /^[0-9][a-zA-Z0-9]{5}$/.test(str);
     }
 
+    // Client-side validation so the user gets instant feedback
     form.addEventListener('submit', function (event) {
         event.preventDefault();
 
+        // Clear all previous errors and messages
         document.getElementById('firstNameError').textContent = '';
         document.getElementById('secondNameError').textContent = '';
         document.getElementById('emailError').textContent = '';
@@ -271,12 +293,14 @@
 
         let valid = true;
 
+        // Read and trim all current values from the form
         const firstName = document.getElementById('firstName').value.trim();
         const secondName = document.getElementById('secondName').value.trim();
         const email = document.getElementById('email').value.trim();
         const phone = document.getElementById('phone').value.trim();
         const eircode = document.getElementById('eircode').value.trim();
 
+        // First name validation rules
         if (!firstName) {
             document.getElementById('firstNameError').textContent = 'First name is required.';
             valid = false;
@@ -288,6 +312,7 @@
             valid = false;
         }
 
+        // Second name validation rules
         if (!secondName) {
             document.getElementById('secondNameError').textContent = 'Second name is required.';
             valid = false;
@@ -299,6 +324,7 @@
             valid = false;
         }
 
+        // Email validation rules
         if (!email) {
             document.getElementById('emailError').textContent = 'Email is required.';
             valid = false;
@@ -307,6 +333,7 @@
             valid = false;
         }
 
+        // Phone number validation rules
         if (!phone) {
             document.getElementById('phoneError').textContent = 'Phone number is required.';
             valid = false;
@@ -318,6 +345,7 @@
             valid = false;
         }
 
+        // Eircode validation rules
         if (!eircode) {
             document.getElementById('eircodeError').textContent = 'Eircode is required.';
             valid = false;
@@ -327,10 +355,12 @@
             valid = false;
         }
 
+        // If anything failed, do not send the request to the server
         if (!valid) {
             return;
         }
 
+        // At this point the data passed client-side checks, so I let the browser submit it
         form.submit();
     });
 </script>
